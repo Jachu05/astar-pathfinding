@@ -1,7 +1,9 @@
-from typing import List
 
 import pygame
 from queue import PriorityQueue
+
+from dist_fncs import manhattan_dist
+from pygame_supp_fncs import reconstruct_path, make_grid_of_square_type, draw, get_clicked_pos
 
 WIDTH = 600
 ROWS = 50
@@ -96,66 +98,12 @@ class Spot:
         return False
 
 
-def h(p1, p2):
-    x1, y1 = p1
-    x2, y2 = p2
-    return abs(x1 - x2) + abs(y1 - y2)
-
-
-def make_grid(rows, width):
-    grid: List[List[Spot]] = []
-    gap = width // rows
-    for i in range(rows):
-        grid.append([])
-        for j in range(rows):
-            spot = Spot(i, j, gap, rows)
-            grid[i].append(spot)
-
-    return grid
-
-
-def draw_grid(win, rows, width):
-    gap = width // rows
-    for i in range(rows):
-        pygame.draw.line(win, GREY, (0, i * gap), (width, i * gap))
-        for j in range(rows):
-            pygame.draw.line(win, GREY, (j * gap, 0), (j * gap, width))
-
-
-def draw(win, grid, rows, width):
-    win.fill(WHITE)
-
-    for row in grid:
-        for spot in row:
-            spot.draw(win)
-
-    draw_grid(win, rows, width)
-    pygame.display.update()
-
-
-def get_clicked_pos(pos, rows, width):
-    gap = width // rows
-    y, x = pos
-
-    row = y // gap
-    col = x // gap
-
-    return row, col
-
-
-def reconstruct_path(current, fnc_draw):
-    while current.came_from is not None:
-        current = current.came_from
-        current.make_path()
-        fnc_draw()
-
-
-def algorithm(fnc_draw, grid, start, end):
+def algorithm(fnc_draw, start, end):
     count = 0
     open_set = PriorityQueue()
     open_set.put((0, count, start))  # F_score, count, Node
     start.g_score = 0
-    start.f_score = h(start.get_pos(), end.get_pos())
+    start.f_score = manhattan_dist(start.get_pos(), end.get_pos())
 
     while not open_set.empty():
         for event in pygame.event.get():
@@ -177,7 +125,7 @@ def algorithm(fnc_draw, grid, start, end):
             if temp_g_score < neighbor.g_score:
                 neighbor.came_from = current
                 neighbor.g_score = temp_g_score
-                neighbor.f_score = temp_g_score + h(neighbor.get_pos(), end.get_pos())
+                neighbor.f_score = temp_g_score + manhattan_dist(neighbor.get_pos(), end.get_pos())
                 if not neighbor.f_visited:
                     count += 1
                     open_set.put((neighbor.f_score, count, neighbor))
@@ -192,7 +140,7 @@ def algorithm(fnc_draw, grid, start, end):
 
 
 def main(win, width):
-    grid = make_grid(ROWS, width)
+    grid = make_grid_of_square_type(ROWS, width, Spot)
 
     start = None
     end = None
@@ -201,7 +149,7 @@ def main(win, width):
     started = False
 
     while run:
-        draw(win, grid, ROWS, width)
+        draw(win, grid, ROWS, width, WHITE, GREY)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -241,12 +189,12 @@ def main(win, width):
                         for spot in row:
                             spot.update_neighbors(grid)
 
-                    algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end)
+                    algorithm(lambda: draw(win, grid, ROWS, width, WHITE, GREY), start, end)
 
                 if event.key == pygame.K_c:
                     start = None
                     end = None
-                    grid = make_grid(ROWS, width)
+                    grid = make_grid_of_square_type(ROWS, width, Spot)
 
     pygame.quit()
 
