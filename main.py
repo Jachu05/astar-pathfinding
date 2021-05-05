@@ -1,7 +1,7 @@
 
 import pygame
 
-from algos import algorithm
+from algos import algorithm, mp_algorithm
 from pygame_supp_fncs import make_grid_of_square_type, draw, get_clicked_pos
 
 WIDTH = 600
@@ -28,11 +28,11 @@ class Spot:
         self.x = row * width
         self.y = col * width
         self.color = WHITE
-        self.neighbors = []
+        self.neighbors_pos = []
         self.width = width
         self.total_rows = total_rows
 
-        self.came_from = None
+        self.came_from_pos: (int, int) = None
         self.f_score = float("inf")
         self.g_score = float("inf")
         self.f_visited = False
@@ -79,19 +79,24 @@ class Spot:
     def draw(self, win):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.width))
 
-    def update_neighbors(self, grid):
-        self.neighbors = []
+    def update_neighbors_pos(self, grid):
+        """
+        Updating only position instead of Spot objects to avoid any nested structure (multiprocessing lol)
+        :param grid:
+        :return:
+        """
+        self.neighbors_pos = []
         if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].is_barrier():  # DOWN
-            self.neighbors.append(grid[self.row + 1][self.col])
+            self.neighbors_pos.append((self.row + 1, self.col))
 
         if self.row > 0 and not grid[self.row - 1][self.col].is_barrier():  # UP
-            self.neighbors.append(grid[self.row - 1][self.col])
+            self.neighbors_pos.append((self.row - 1, self.col))
 
         if self.col < self.total_rows - 1 and not grid[self.row][self.col + 1].is_barrier():  # RIGHT
-            self.neighbors.append(grid[self.row][self.col + 1])
+            self.neighbors_pos.append((self.row, self.col + 1))
 
         if self.col > 0 and not grid[self.row][self.col - 1].is_barrier():  # LEFT
-            self.neighbors.append(grid[self.row][self.col - 1])
+            self.neighbors_pos.append((self.row, self.col - 1))
 
     def __lt__(self, other):
         return False
@@ -145,9 +150,10 @@ def main(win, width):
                 if event.key == pygame.K_SPACE and start and end:
                     for row in grid:
                         for spot in row:
-                            spot.update_neighbors(grid)
+                            spot.update_neighbors_pos(grid)
 
-                    algorithm(lambda: draw(win, grid, ROWS, width, WHITE, GREY), start, end)
+                    algorithm(lambda: draw(win, grid, ROWS, width, WHITE, GREY), grid, start, end)
+                    # mp_algorithm(lambda: draw(win, grid, ROWS, width, WHITE, GREY), grid, start, end)
 
                 if event.key == pygame.K_c:
                     start = None

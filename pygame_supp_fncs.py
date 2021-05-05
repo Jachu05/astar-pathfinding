@@ -3,9 +3,10 @@ from typing import List
 import pygame
 
 
-def reconstruct_path(current, fnc_draw):
-    while current.came_from is not None:
-        current = current.came_from
+def reconstruct_path(current, grid, fnc_draw):
+    while current.came_from_pos is not None:
+        current_pos = current.came_from_pos
+        current = grid[current_pos[0]][current_pos[1]]
         current.make_path()
         fnc_draw()
 
