@@ -152,8 +152,8 @@ def main(win, width):
                         for spot in row:
                             spot.update_neighbors_pos(grid)
 
-                    algorithm(lambda: draw(win, grid, ROWS, width, WHITE, GREY), grid, start, end)
-                    # mp_algorithm(lambda: draw(win, grid, ROWS, width, WHITE, GREY), grid, start, end)
+                    # algorithm(lambda: draw(win, grid, ROWS, width, WHITE, GREY), grid, start, end)
+                    mp_algorithm(lambda: draw(win, grid, ROWS, width, WHITE, GREY), grid, start, end)
 
                 if event.key == pygame.K_c:
                     start = None

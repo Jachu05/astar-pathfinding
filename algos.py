@@ -50,11 +50,42 @@ def algorithm(fnc_draw, grid, start, end):
     return False
 
 
+class MpAlgorithm:
+    def __init__(self, fnc_draw, grid, start, end):
+        self.fnc_draw = fnc_draw
+        self.grid = grid
+        self.start = start
+        self.end = end
+
+    def algorithm(self):
+        pass
+
+    def start(self):
+        SyncManager.register("PriorityQueue", PriorityQueue)
+        manager = SyncManager()
+        manager.start()
+        p_queue = manager.PriorityQueue()
+        shared_grid = manager.list([manager.list(row) for row in self.grid])
+
+        start_pos = self.start.get_pos()
+        end_pos = self.end.get_pos()
+
+        self.start.g_score = 0
+        self.start.f_score = manhattan_dist(self.start.get_pos(), self.end.get_pos())
+
+        p_queue.put((0, start_pos))
+
+        p = Pool(1)
+        tr = p.apply_async(self.algorithm, args=(p_queue,))
+        gtr = tr.get()
+
+
 def mp_algorithm(fnc_draw, grid, start, end):
     SyncManager.register("PriorityQueue", PriorityQueue)
     manager = SyncManager()
     manager.start()
     p_queue = manager.PriorityQueue()
+    shared_grid = manager.list([manager.list(row) for row in grid])
 
     start_pos = start.get_pos()
     end_pos = end.get_pos()
@@ -63,6 +94,8 @@ def mp_algorithm(fnc_draw, grid, start, end):
     start.f_score = manhattan_dist(start.get_pos(), end.get_pos())
 
     p_queue.put((0, start_pos))
+
+
 
     def helper(queue):
         while True:
