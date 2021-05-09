@@ -32,6 +32,12 @@ def draw(win, grid, rows, width, bg_color, grid_color):
     pygame.display.update()
 
 
+def draw_from_pos_and_color(win, grid, spot_pos, color):
+    spot = grid[spot_pos[0]][spot_pos[1]]
+    pygame.draw.rect(win, color, (spot.x, spot.y, spot.width, spot.width))
+    pygame.display.update()
+
+
 def draw_grid(win, rows, width, color):
     gap = width // rows
     for i in range(rows):
@@ -46,7 +52,7 @@ def make_grid_of_square_type(rows, width, square_type):
     for i in range(rows):
         grid.append([])
         for j in range(rows):
-            spot = square_type(i, j, gap, rows)
+            spot = square_type(i, j, gap, i + j)
             grid[i].append(spot)
 
     return grid

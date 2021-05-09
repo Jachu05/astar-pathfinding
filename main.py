@@ -1,8 +1,11 @@
 
 import pygame
 
-from algos import algorithm, mp_algorithm
+from algos import algorithm, MpAlgorithm
+from graphs_supp_func import create_clean_dist_map
 from pygame_supp_fncs import make_grid_of_square_type, draw, get_clicked_pos
+
+MP = True
 
 WIDTH = 600
 ROWS = 50
@@ -21,16 +24,21 @@ GREY = (128, 128, 128)
 TURQUOISE = (64, 224, 208)
 
 
+class MainMap:
+    def __init__(self, rows, width, ):
+        self.dist_grid = create_clean_dist_map(rows)
+        self.spot_grid = make_grid_of_square_type(rows, width, Spot)
+
+
 class Spot:
-    def __init__(self, row, col, width, total_rows):
+    def __init__(self, row, col, width, node_number):
         self.row = row
         self.col = col
         self.x = row * width
         self.y = col * width
         self.color = WHITE
-        self.neighbors_pos = []
         self.width = width
-        self.total_rows = total_rows
+        self.node_number = node_number
 
         self.came_from_pos: (int, int) = None
         self.f_score = float("inf")
@@ -153,7 +161,10 @@ def main(win, width):
                             spot.update_neighbors_pos(grid)
 
                     # algorithm(lambda: draw(win, grid, ROWS, width, WHITE, GREY), grid, start, end)
-                    mp_algorithm(lambda: draw(win, grid, ROWS, width, WHITE, GREY), grid, start, end)
+                    # mp_algorithm(draw, win, ROWS, width, WHITE, GREY, grid, start, end)
+                    # print(1, id(grid))
+                    alg = MpAlgorithm(draw, win, ROWS, width, WHITE, GREY, grid, start.get_pos(), end.get_pos())
+                    alg.start()
 
                 if event.key == pygame.K_c:
                     start = None
