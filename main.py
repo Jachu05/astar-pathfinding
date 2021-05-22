@@ -1,8 +1,8 @@
 
 import pygame
 
-from algos import algorithm, MpAlgorithm
-from graphs_supp_func import create_clean_dist_map
+from algos import MpAlgorithm
+from graphs.graphs_supp_func import create_clean_dist_map
 from pygame_supp_fncs import make_grid_of_square_type, draw, get_clicked_pos
 
 MP = True
