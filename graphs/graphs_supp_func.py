@@ -54,12 +54,10 @@ def eg_with_two_separate_paths(csr_graph, first_group, second_group, common_dist
     """
 
     def merge_partial_graph_to_expected(nodes_arr, group_predecessors, predecessors, group_dist, dists):
-        # TODO handle this indexes replacement
-        a = np.argwhere(group_predecessors != -9999)
-        group_predecessors = np.choose(group_predecessors, nodes_arr, mode='wrap')
-        di = np.diag_indices(group_predecessors.shape[0])
-        group_predecessors[di] = -9999
-        predecessors[nodes_arr.reshape((-1, 1)), nodes_arr] = group_predecessors
+        empty_ind = np.argwhere(group_predecessors == -9999)
+        group_glob_predecessors = np.choose(group_predecessors, nodes_arr, mode='wrap')
+        group_glob_predecessors[empty_ind[:, 0], empty_ind[:, 1]] = -9999
+        predecessors[nodes_arr.reshape((-1, 1)), nodes_arr] = group_glob_predecessors
         dists[nodes_arr.reshape((-1, 1)), nodes_arr] = group_dist
 
     def merge_uncommon_groups_to_expected(a_uncommon_nodes, b_uncommon_nodes, expected, common, dists):
@@ -75,9 +73,9 @@ def eg_with_two_separate_paths(csr_graph, first_group, second_group, common_dist
         expected[uncommon_idx[:, 0], uncommon_idx[:, 1]] = expected[chosen_common_nodes, uncommon_idx[:, 1]]
         dists[uncommon_idx[:, 0], uncommon_idx[:, 1]] = min_dist
 
-    common_group = np.intersect1d(first_group, second_group)
-    first_uncommon_nodes = np.setdiff1d(first_group, common_group)
-    second_uncommon_nodes = np.setdiff1d(second_group, common_group)
+    common_nodes = np.intersect1d(first_group, second_group)
+    first_uncommon_nodes = np.setdiff1d(first_group, common_nodes)
+    second_uncommon_nodes = np.setdiff1d(second_group, common_nodes)
 
     first_graph_group = csr_graph[first_group, :][:, first_group]
     second_graph_group = csr_graph[second_group, :][:, second_group]
@@ -91,7 +89,7 @@ def eg_with_two_separate_paths(csr_graph, first_group, second_group, common_dist
     merge_partial_graph_to_expected(second_group, second_predecessors, common_predecessors, second_dist, common_dists)
 
     merge_uncommon_groups_to_expected(first_uncommon_nodes, second_uncommon_nodes,
-                                      common_predecessors, common_group, common_dists)
+                                      common_predecessors, common_nodes, common_dists)
 
     return common_dists, common_predecessors
 
@@ -114,5 +112,15 @@ if __name__ == "__main__":
     all_dist, all_predecessors = shortest_path(csgraph=graph, method='D',
                                                directed=True, return_predecessors=True)
 
-    print('Merged dist calc equal:', np.all(np.equal(ab_dists, all_dist)))
-    print('Merged predecessors calc equal:', np.all(np.equal(ab_predecessors, all_predecessors)))
+    check_group_from_ab_pred = ab_predecessors[np.unique([a_group, b_group]).reshape((-1, 1)),
+                                               np.unique([a_group, b_group])].astype('int16')
+    check_group_from_all_pred = all_predecessors[np.unique([a_group, b_group]).reshape((-1, 1)),
+                                                 np.unique([a_group, b_group])].astype('int16')
+    print('Merged predecessors calc equal:', np.all(np.equal(check_group_from_ab_pred, check_group_from_all_pred)))
+
+    # TODO write tests for this
+    check_group_from_ab_dist = ab_dists[np.unique([a_group, b_group]).reshape((-1, 1)),
+                                        np.unique([a_group, b_group])].astype('int16')
+    check_group_from_all_dist = all_dist[np.unique([a_group, b_group]).reshape((-1, 1)),
+                                         np.unique([a_group, b_group])].astype('int16')
+    print('Merged dist calc equal:', np.all(np.equal(check_group_from_ab_dist, check_group_from_all_dist)))
